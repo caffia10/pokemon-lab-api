@@ -8,7 +8,7 @@ import (
 )
 
 type CreatePokemonController struct {
-	s      application.CreatePokemonService
+	s      application.CreatePokemonUseCase
 	logger *zap.Logger
 }
 
@@ -50,7 +50,7 @@ func (c *CreatePokemonController) Handle(ctx *fiber.Ctx) error {
 		Category: pkmd.Category,
 		Weight:   pkmd.Weight,
 		ImgUrl:   pkmd.ImgUrl,
-		Types:    make([]*application.PokemonType, len(pkmd.Types)),
+		Types:    make([]*application.PokemonType, 0, len(pkmd.Types)),
 	}
 
 	for _, v := range pkmd.Types {
@@ -68,7 +68,7 @@ func (c *CreatePokemonController) Handle(ctx *fiber.Ctx) error {
 	return ctx.SendStatus(fiber.StatusOK)
 }
 
-func NewCreatePokemonController(s application.CreatePokemonService, logger *zap.Logger) *CreatePokemonController {
+func NewCreatePokemonController(s application.CreatePokemonUseCase, logger *zap.Logger) *CreatePokemonController {
 	return &CreatePokemonController{
 		s:      s,
 		logger: logger,

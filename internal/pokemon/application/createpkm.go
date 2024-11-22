@@ -1,4 +1,4 @@
-package usecase
+package application
 
 import (
 	"pokemon-lab-api/internal/pokemon/domain"
@@ -6,17 +6,18 @@ import (
 	"go.uber.org/zap"
 )
 
-type createPokemon struct {
+// defaultCreatePokemonUseCase implements CreatePokemonUseCase
+type defaultCreatePokemonUseCase struct {
 	repo   domain.PokemonRepository
 	logger *zap.Logger
 }
 
-func (uc *createPokemon) Do(pkm *domain.Pokemon) error {
+func (uc *defaultCreatePokemonUseCase) Do(pkm *domain.Pokemon) error {
 
 	lf := []zap.Field{
 		zap.String("logger", "createPokemon"),
 		zap.String("sub-logger", "Do"),
-		zap.String("pokemon-id", pkm.Id),
+		zap.String("pokemon-name", pkm.Name),
 	}
 
 	uc.logger.Info("creating pokemon", lf...)
@@ -31,9 +32,9 @@ func (uc *createPokemon) Do(pkm *domain.Pokemon) error {
 	return err
 }
 
-func NewCreatePokemonUsecase(r domain.PokemonRepository, logger *zap.Logger) domain.CreatePokemonUsecase {
+func NewCreatePokemonUsecase(r domain.PokemonRepository, logger *zap.Logger) CreatePokemonUseCase {
 
-	return &createPokemon{
+	return &defaultCreatePokemonUseCase{
 		repo:   r,
 		logger: logger,
 	}

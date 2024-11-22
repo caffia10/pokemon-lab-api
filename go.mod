@@ -6,6 +6,7 @@ require (
 	github.com/gofiber/fiber/v2 v2.52.4
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/pkg/errors v0.9.1
+	github.com/scylladb/gocqlx/v3 v3.0.0
 	go.mongodb.org/mongo-driver v1.15.0
 	go.uber.org/dig v1.17.1
 	go.uber.org/zap v1.27.0
@@ -14,7 +15,6 @@ require (
 require (
 	github.com/hailocab/go-hostpool v0.0.0-20160125115350-e80d13ce29ed // indirect
 	github.com/scylladb/go-reflectx v1.0.1 // indirect
-	github.com/scylladb/gocqlx/v3 v3.0.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 )
@@ -23,7 +23,7 @@ require (
 	github.com/andybalholm/brotli v1.0.5 // indirect
 	github.com/gocql/gocql v1.6.0
 	github.com/golang/snappy v0.0.4 // indirect
-	github.com/google/uuid v1.6.0 // indirect
+	github.com/google/uuid v1.6.0
 	github.com/klauspost/compress v1.17.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect

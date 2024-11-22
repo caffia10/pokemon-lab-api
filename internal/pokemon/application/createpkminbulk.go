@@ -1,4 +1,4 @@
-package usecase
+package application
 
 import (
 	"pokemon-lab-api/internal/pokemon/domain"
@@ -6,12 +6,13 @@ import (
 	"go.uber.org/zap"
 )
 
-type createPokemonInBulk struct {
+// defaultCreatePokemonInBulkUseCase implements CreatePokemonInBulkUseCase
+type defaultCreatePokemonInBulkUseCase struct {
 	repo   domain.PokemonRepository
 	logger *zap.Logger
 }
 
-func (uc *createPokemonInBulk) Do(pkms []*domain.Pokemon) error {
+func (uc *defaultCreatePokemonInBulkUseCase) Do(pkms []*domain.Pokemon) error {
 
 	err := uc.repo.CreateManyPokemon(pkms)
 
@@ -28,9 +29,9 @@ func (uc *createPokemonInBulk) Do(pkms []*domain.Pokemon) error {
 	return err
 }
 
-func NewCreatePokemonInBulkUsecase(r domain.PokemonRepository, logger *zap.Logger) domain.CreatePokemonInBulkUsecase {
+func NewCreatePokemonInBulkUsecase(r domain.PokemonRepository, logger *zap.Logger) CreatePokemonInBulkUseCase {
 
-	return &createPokemonInBulk{
+	return &defaultCreatePokemonInBulkUseCase{
 		repo:   r,
 		logger: logger,
 	}

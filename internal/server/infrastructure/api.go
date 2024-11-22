@@ -22,7 +22,8 @@ func NewFiberApiServer(cpCtrl *pkmInfra.CreatePokemonController) *restServer {
 		return c.SendString("Pong")
 	})
 
-	app.Post("/create-pokemon", cpCtrl.Handle)
+	api := app.Group("api")
+	api.Post("/create-pokemon", cpCtrl.Validate, cpCtrl.Handle)
 
 	return &restServer{
 		app:    app,

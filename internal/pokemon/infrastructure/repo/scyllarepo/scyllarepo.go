@@ -2,6 +2,7 @@ package scyllarepo
 
 import (
 	"errors"
+	"fmt"
 	"pokemon-lab-api/internal/pokemon/domain"
 	"pokemon-lab-api/internal/server/infrastructure/config"
 
@@ -112,6 +113,11 @@ func initializeDtoFromModel(pkm *domain.Pokemon) *pokemonDto {
 		Category: pkm.Category,
 		Weight:   pkm.Weight,
 		ImgUrl:   pkm.ImgUrl,
+		Types:    make([]*string, 0, len(pkm.Types)),
+	}
+
+	for _, t := range pkm.Types {
+		pkmd.Types = append(pkmd.Types, &t.Name)
 	}
 
 	return pkmd
@@ -122,7 +128,7 @@ func (r *PokemonScylla) CreatePokemon(pkm *domain.Pokemon) error {
 	lf := []zap.Field{
 		zap.String("logger", "PokemonScylla"),
 		zap.String("sub-logger", "CreatePokemon"),
-		zap.String("pokemon-id", pkm.Id),
+		zap.String("pokemon-name", pkm.Name),
 	}
 
 	r.logger.Info("creating pokemon", lf...)
@@ -180,18 +186,38 @@ func (r *PokemonScylla) CreateManyPokemon(pkms []*domain.Pokemon) error {
 	return nil
 }
 
-func NewPokemonRepository(s *gocqlx.Session, c *config.Config, l *zap.Logger) domain.PokemonRepository {
+func (r *PokemonScylla) applyTable() error {
+	data := make([]any, len(r.table.Metadata().Columns)+1)
+	data[0] = r.table.Name()
+	for i := 0; i < len(r.table.Metadata().Columns); i++ {
+		data[i+1] = r.table.Metadata().Columns[i]
+	}
+	query := fmt.Sprintf(`CREATE TABLE IF NOT EXISTS %s (
+		%s UUID PRIMARY KEY,
+		%s TEXT,
+		%s TEXT,
+		%s TEXT,
+		%s TEXT,
+		%s LIST<TEXT>
+	);`, data...)
+
+	return r.session.ExecStmt(query)
+}
+
+func NewPokemonRepository(s *gocqlx.Session, c *config.Config, l *zap.Logger) (domain.PokemonRepository, error) {
 
 	var pokemonMetadata = table.Metadata{
 		Name:    c.PokemonScyllasTable,
-		Columns: []string{"id", "name", "category, weight, img_url"},
+		Columns: []string{"id", "name", "category", "weight", "img_url", "types"},
 		PartKey: []string{"first_name"},
 		SortKey: []string{"last_name"},
 	}
 
-	return &PokemonScylla{
+	r := &PokemonScylla{
 		session: s,
 		table:   table.New(pokemonMetadata),
 		logger:  l,
 	}
+
+	return r, r.applyTable()
 }

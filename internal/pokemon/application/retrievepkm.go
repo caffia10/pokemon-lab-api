@@ -1,4 +1,4 @@
-package usecase
+package application
 
 import (
 	pkmtDomain "pokemon-lab-api/internal/pokemon-type/domain"
@@ -7,13 +7,14 @@ import (
 	"go.uber.org/zap"
 )
 
-type retrievePokemonbyId struct {
+// defaultRetrievePokemonbyIdUseCase implements RetrievePokemonbyIdUseCase
+type defaultRetrievePokemonbyIdUseCase struct {
 	repo     domain.PokemonRepository
 	pkmtRepo pkmtDomain.PokemonTypeRepository
 	logger   *zap.Logger
 }
 
-func (uc *retrievePokemonbyId) Do(id string) (*domain.Pokemon, error) {
+func (uc *defaultRetrievePokemonbyIdUseCase) Do(id string) (*domain.Pokemon, error) {
 
 	lf := []zap.Field{
 		zap.String("logger", "retrievePokemonbyId"),
@@ -51,9 +52,9 @@ func (uc *retrievePokemonbyId) Do(id string) (*domain.Pokemon, error) {
 	return p, nil
 }
 
-func NewRetrievePokemonbyIdUsecase(r domain.PokemonRepository, pkmtr pkmtDomain.PokemonTypeRepository) domain.RetrievePokemonbyIdUsecase {
+func NewRetrievePokemonbyIdUsecase(r domain.PokemonRepository, pkmtr pkmtDomain.PokemonTypeRepository) RetrievePokemonbyIdUseCase {
 
-	return &retrievePokemonbyId{
+	return &defaultRetrievePokemonbyIdUseCase{
 		repo:     r,
 		pkmtRepo: pkmtr,
 	}

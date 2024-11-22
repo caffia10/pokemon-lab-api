@@ -6,7 +6,8 @@ import (
 
 func RetrieveAppInjections() []interface{} {
 	return []interface{}{
-		pkmApp.NewCreatePokemonService,
-		pkmApp.NewRetrievePokemonbyIdService,
+		pkmApp.NewCreatePokemonInBulkUsecase,
+		pkmApp.NewCreatePokemonUsecase,
+		pkmApp.NewRetrievePokemonbyIdUsecase,
 	}
 }

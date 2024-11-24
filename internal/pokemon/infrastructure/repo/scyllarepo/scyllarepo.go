@@ -123,7 +123,7 @@ func initializeDtoFromModel(pkm *domain.Pokemon) *pokemonDto {
 	return pkmd
 }
 
-func (r *PokemonScylla) CreatePokemon(pkm *domain.Pokemon) error {
+func (r *PokemonScylla) Create(pkm *domain.Pokemon) error {
 
 	lf := []zap.Field{
 		zap.String("logger", "PokemonScylla"),
@@ -160,7 +160,7 @@ func (r *PokemonScylla) CreateManyPokemon(pkms []*domain.Pokemon) error {
 		wg.Add(1)
 		go func(p *domain.Pokemon, w *sync.WaitGroup) {
 			defer w.Done()
-			err := r.CreatePokemon(p)
+			err := r.Create(p)
 			if err != nil {
 				errChan <- err
 			}

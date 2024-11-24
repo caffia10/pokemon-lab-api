@@ -9,9 +9,8 @@ import (
 
 // defaultRetrievePokemonbyIdUseCase implements RetrievePokemonbyIdUseCase
 type defaultRetrievePokemonbyIdUseCase struct {
-	repo     domain.PokemonRepository
-	pkmtRepo pkmtDomain.PokemonTypeRepository
-	logger   *zap.Logger
+	repo   domain.PokemonRepository
+	logger *zap.Logger
 }
 
 func (uc *defaultRetrievePokemonbyIdUseCase) Do(id string) (*domain.Pokemon, error) {
@@ -32,30 +31,12 @@ func (uc *defaultRetrievePokemonbyIdUseCase) Do(id string) (*domain.Pokemon, err
 		return nil, errU
 	}
 
-	{
-		tIds := make([]string, len(p.Types))
-		for _, t := range p.Types {
-			tIds = append(tIds, t.Id)
-		}
-
-		ts, errRts := uc.pkmtRepo.RetriveByIds(tIds)
-
-		if errRts != nil {
-			lf = append(lf, zap.NamedError("error", errRts))
-			uc.logger.Error("error at retriving pokemon types", lf...)
-			return nil, errRts
-		}
-
-		copy(p.Types, ts)
-	}
-
 	return p, nil
 }
 
 func NewRetrievePokemonbyIdUsecase(r domain.PokemonRepository, pkmtr pkmtDomain.PokemonTypeRepository) RetrievePokemonbyIdUseCase {
 
 	return &defaultRetrievePokemonbyIdUseCase{
-		repo:     r,
-		pkmtRepo: pkmtr,
+		repo: r,
 	}
 }

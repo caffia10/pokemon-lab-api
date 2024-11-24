@@ -1,4 +1,4 @@
-package repo
+package mongorepo
 
 import (
 	"context"
@@ -60,26 +60,9 @@ func (r *PokemonTypeMongoRepository) RetriveById(id string) (*domain.PokemonType
 	}, nil
 }
 
-func (r *PokemonTypeMongoRepository) RetriveByIds(ids []string) ([]*domain.PokemonType, error) {
+func (r *PokemonTypeMongoRepository) RetriveAll() ([]*domain.PokemonType, error) {
 
-	oIds := make([]*primitive.ObjectID, len(ids))
-	for _, v := range ids {
-		idpo, errIdpo := primitive.ObjectIDFromHex(v)
-
-		if errIdpo != nil {
-			log.Printf("[PokemonTypeMongoRepository][RetriveByIds] warning: fail to create the primitive objectId %s\n", v)
-			continue
-		}
-
-		oIds = append(oIds, &idpo)
-	}
-
-	if len(oIds) == 0 {
-		log.Printf("[PokemonTypeMongoRepository][RetriveByIds] %s\n", ErrInvalidIds.Error())
-		return nil, ErrInvalidIds
-	}
-
-	filter := bson.M{"_id": bson.M{"$in": oIds}}
+	filter := bson.M{}
 	ctx := context.TODO()
 	cursor, err := r.coll.Find(ctx, filter)
 

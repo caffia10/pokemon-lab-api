@@ -6,7 +6,6 @@ type PokemonType struct {
 }
 
 type PokemonTypeRepository interface {
-	RetriveById(id string) (*PokemonType, error)
-	RetriveByIds(id []string) ([]*PokemonType, error)
+	RetriveAll() ([]*PokemonType, error)
 	Create(pkmt *PokemonType) error
 }

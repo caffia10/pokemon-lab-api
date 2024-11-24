@@ -1,7 +1,8 @@
 package injections
 
 import (
-	pkmtInfraReo "pokemon-lab-api/internal/pokemon-type/infrastructure/repo"
+	pkmtInfraHttp "pokemon-lab-api/internal/pokemon-type/infrastructure/http"
+	pkmtInfraRepo "pokemon-lab-api/internal/pokemon-type/infrastructure/repo/scyllarepo"
 	pkmInfraHttp "pokemon-lab-api/internal/pokemon/infrastructure/http"
 	pkmInfraRepo "pokemon-lab-api/internal/pokemon/infrastructure/repo/scyllarepo"
 	serverInfra "pokemon-lab-api/internal/server/infrastructure"
@@ -17,9 +18,11 @@ func RetrieveInfraInjections() []interface{} {
 		serverInfra.NewFiberApiServer,
 		mongoctx.NewMongoDatabase,
 		config.NewConfig,
-		pkmtInfraReo.NewPokemonTypeRepository,
+		pkmtInfraRepo.NewPokemonTypeRepository,
 		pkmInfraHttp.NewCreatePokemonController,
 		scylladbctx.NewSession,
 		logger.New,
+		pkmtInfraHttp.NewCreatePokemonTypeController,
+		pkmtInfraHttp.NewRetrieveAllPokemonTypeController,
 	}
 }

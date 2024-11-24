@@ -17,6 +17,6 @@ type Pokemon struct {
 
 type PokemonRepository interface {
 	RetriveById(id string) (*Pokemon, error)
-	CreatePokemon(pkm *Pokemon) error
+	Create(pkm *Pokemon) error
 	CreateManyPokemon(pkms []*Pokemon) error
 }

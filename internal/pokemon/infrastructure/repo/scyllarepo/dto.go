@@ -6,5 +6,5 @@ type pokemonDto struct {
 	Category string    `db:"category"`
 	Weight   string    `db:"weight"`
 	ImgUrl   string    `db:"img_url"`
-	Types    []*string `db:"types"`
+	Types    []*string `db:"types"` // save only the id
 }

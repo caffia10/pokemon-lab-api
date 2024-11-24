@@ -22,7 +22,7 @@ func (uc *defaultCreatePokemonUseCase) Do(pkm *domain.Pokemon) error {
 
 	uc.logger.Info("creating pokemon", lf...)
 
-	err := uc.repo.CreatePokemon(pkm)
+	err := uc.repo.Create(pkm)
 
 	if err != nil {
 		lf = append(lf, zap.NamedError("error", err))

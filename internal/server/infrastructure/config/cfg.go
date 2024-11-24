@@ -13,6 +13,7 @@ type Config struct {
 	PokemonTypeMongoCollection string   `envconfig:"POKEMON_TYPE_MONGO_COLLECTION"`
 	ScyllaHosts                []string `envconfig:"SCYLLA_HOSTS"`
 	PokemonScyllasTable        string   `envconfig:"POKEMON_SCYLLAS_TABLE"`
+	PokemonTypeScyllasTable    string   `envconfig:"POKEMON_TYPE_SCYLLAS_TABLE"`
 	ScyllaKeySpaces            string   `envconfig:"SCYLLA_KEY_SPACE"`
 }
 

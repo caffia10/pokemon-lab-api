@@ -95,7 +95,7 @@ func (r *PokemonMongo) initializeDtoFromModel(pkm *domain.Pokemon) *pokemonDto {
 	return pkmd
 }
 
-func (r *PokemonMongo) CreatePokemon(pkm *domain.Pokemon) error {
+func (r *PokemonMongo) Create(pkm *domain.Pokemon) error {
 
 	lf := []zap.Field{
 		zap.String("logger", "PokemonMongo"),

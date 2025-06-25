@@ -1,7 +1,7 @@
 package main
 
-import "pokemon-lab-api/internal/server"
+import "pokemon-lab-api/internal/infrastructure"
 
 func main() {
-	server.InitServer()
+	infrastructure.InitServer()
 }

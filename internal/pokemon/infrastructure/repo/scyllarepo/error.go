@@ -1,22 +1,31 @@
 package scyllarepo
 
+import (
+	"fmt"
+	"strings"
+)
+
 const msg = "errors detected in multi operation"
 
 type MultiError struct {
-	Detail []error
+	detail []error
 }
 
 func (m *MultiError) Append(e error) {
-	m.Detail = append(m.Detail, e)
+	m.detail = append(m.detail, e)
 }
 
 func (m *MultiError) Error() string {
-	return msg
+	var sb strings.Builder
+	for i, d := range m.detail {
+		sb.WriteString(fmt.Sprintf("- index: %d - detail: %s ", i, d.Error()))
+	}
+	return sb.String()
 }
 
 func NewBufferedMultiError(size int) *MultiError {
 	return &MultiError{
-		Detail: make([]error, size),
+		detail: make([]error, size),
 	}
 }
 

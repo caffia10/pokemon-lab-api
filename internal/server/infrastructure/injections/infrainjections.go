@@ -20,6 +20,7 @@ func RetrieveInfraInjections() []interface{} {
 		config.NewConfig,
 		pkmtInfraRepo.NewPokemonTypeRepository,
 		pkmInfraHttp.NewCreatePokemonController,
+		pkmInfraHttp.NewRetrieveAllPokemonController,
 		scylladbctx.NewSession,
 		logger.New,
 		pkmtInfraHttp.NewCreatePokemonTypeController,

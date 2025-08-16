@@ -7,6 +7,7 @@ import (
 )
 
 type Config struct {
+	ServerPort                 string   `envconfig:"SERVER_PORT"`
 	MongoUri                   string   `envconfig:"MONGO_URI"`
 	MongoDatabase              string   `envconfig:"MONGO_DATABASE"`
 	PokemonMongoCollection     string   `envconfig:"POKEMON_MONGO_COLLECTION"`

@@ -6,9 +6,9 @@ type pokemonTypeDto struct {
 }
 
 type pokemonDto struct {
-	Name     string            `json:"name"`
-	Weight   string            `json:"weight"`
-	Category string            `json:"category"`
-	ImgUrl   string            `json:"img_url"`
-	Types    []*pokemonTypeDto `json:"types"`
+	Name     string           `json:"name"`
+	Weight   string           `json:"weight"`
+	Category string           `json:"category"`
+	ImgUrl   string           `json:"img_url"`
+	Types    []pokemonTypeDto `json:"types"`
 }

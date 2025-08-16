@@ -2,6 +2,7 @@ package application
 
 import (
 	"pokemon-lab-api/internal/pokemon-type/domain"
+	"pokemon-lab-api/pkg/mderrors"
 
 	"go.uber.org/zap"
 )
@@ -14,19 +15,10 @@ type defaultRetrieveAllPokemonTypeCase struct {
 
 func (uc *defaultRetrieveAllPokemonTypeCase) Do() ([]*PokemonType, error) {
 
-	lf := []zap.Field{
-		zap.String("logger", "defaultRetrieveAllPokemonTypeCase"),
-		zap.String("sub-logger", "Do"),
-	}
-
-	uc.logger.Info("retrieving pokemon type", lf...)
-
 	p, errU := uc.repo.RetriveAll()
 
 	if errU != nil {
-		lf = append(lf, zap.NamedError("error", errU))
-		uc.logger.Error("error at retriving pokemon type", lf...)
-		return nil, errU
+		return nil, mderrors.NewMetadataError(errU)
 	}
 
 	return p, nil

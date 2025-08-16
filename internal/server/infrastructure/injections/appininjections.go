@@ -10,6 +10,7 @@ func RetrieveAppInjections() []interface{} {
 		pkmApp.NewCreatePokemonInBulkUsecase,
 		pkmApp.NewCreatePokemonUsecase,
 		pkmApp.NewRetrievePokemonbyIdUsecase,
+		pkmApp.NewRetrieveAllPokemonTypeUsecase,
 		pkmtApp.NewRetrieveAllPokemonTypeUsecase,
 		pkmtApp.NewCreatePokemonTypeInBulkUsecase,
 		pkmtApp.NewCreatePokemonTypeUsecase,

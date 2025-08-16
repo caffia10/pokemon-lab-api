@@ -2,37 +2,28 @@ package application
 
 import (
 	"pokemon-lab-api/internal/pokemon/domain"
-
-	"go.uber.org/zap"
+	"pokemon-lab-api/pkg/mderrors"
 )
 
 // defaultCreatePokemonInBulkUseCase implements CreatePokemonInBulkUseCase
 type defaultCreatePokemonInBulkUseCase struct {
-	repo   domain.PokemonRepository
-	logger *zap.Logger
+	repo domain.PokemonRepository
 }
 
-func (uc *defaultCreatePokemonInBulkUseCase) Do(pkms []*domain.Pokemon) error {
+func (uc *defaultCreatePokemonInBulkUseCase) Do(pkms []domain.Pokemon) error {
 
 	err := uc.repo.CreateManyPokemon(pkms)
 
 	if err != nil {
-
-		lf := []zap.Field{
-			zap.String("logger", "createPokemonInBulk"),
-			zap.String("sub-logger", "Do"),
-			zap.NamedError("error", err),
-		}
-		uc.logger.Error("error at creating pokemon", lf...)
+		return mderrors.NewMetadataError(err)
 	}
 
-	return err
+	return nil
 }
 
-func NewCreatePokemonInBulkUsecase(r domain.PokemonRepository, logger *zap.Logger) CreatePokemonInBulkUseCase {
+func NewCreatePokemonInBulkUsecase(r domain.PokemonRepository) CreatePokemonInBulkUseCase {
 
 	return &defaultCreatePokemonInBulkUseCase{
-		repo:   r,
-		logger: logger,
+		repo: r,
 	}
 }

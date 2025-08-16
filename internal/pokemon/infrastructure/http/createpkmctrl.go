@@ -2,14 +2,13 @@ package http
 
 import (
 	"pokemon-lab-api/internal/pokemon/application"
+	"pokemon-lab-api/pkg/mderrors"
 
 	"github.com/gofiber/fiber/v2"
-	"go.uber.org/zap"
 )
 
 type CreatePokemonController struct {
-	s      application.CreatePokemonUseCase
-	logger *zap.Logger
+	s application.CreatePokemonUseCase
 }
 
 func (c *CreatePokemonController) Validate(ctx *fiber.Ctx) error {
@@ -18,12 +17,6 @@ func (c *CreatePokemonController) Validate(ctx *fiber.Ctx) error {
 	errB := ctx.BodyParser(pkm)
 
 	if errB != nil {
-		lf := []zap.Field{
-			zap.String("logger", "CreatePokemonController"),
-			zap.String("sub-logger", "Validate"),
-		}
-		lf = append(lf, zap.NamedError("error", errB))
-		c.logger.Error("unexpected error at unmarshaling request", lf...)
 		return fiber.ErrBadRequest
 	}
 
@@ -34,14 +27,7 @@ func (c *CreatePokemonController) Validate(ctx *fiber.Ctx) error {
 func (c *CreatePokemonController) Handle(ctx *fiber.Ctx) error {
 
 	pkmd, ok := ctx.Locals("request").(*pokemonDto)
-
-	lf := []zap.Field{
-		zap.String("logger", "CreatePokemonController"),
-		zap.String("sub-logger", "Handle"),
-	}
-
 	if !ok {
-		c.logger.Error("error at retrieving request from locals", lf...)
 		return fiber.ErrBadRequest
 	}
 
@@ -50,27 +36,24 @@ func (c *CreatePokemonController) Handle(ctx *fiber.Ctx) error {
 		Category: pkmd.Category,
 		Weight:   pkmd.Weight,
 		ImgUrl:   pkmd.ImgUrl,
-		Types:    make([]*application.PokemonType, 0, len(pkmd.Types)),
+		Types:    make([]application.PokemonType, 0, len(pkmd.Types)),
 	}
 
 	for _, v := range pkmd.Types {
-		pkm.Types = append(pkm.Types, (*application.PokemonType)(v))
+		pkm.Types = append(pkm.Types, (application.PokemonType)(v))
 	}
 
 	errC := c.s.Do(pkm)
 
 	if errC != nil {
-		lf = append(lf, zap.NamedError("error", errC))
-		c.logger.Error("error at creating pokemon request from service", lf...)
-		return fiber.ErrConflict
+		return mderrors.NewMetadataError(errC)
 	}
 
 	return ctx.SendStatus(fiber.StatusOK)
 }
 
-func NewCreatePokemonController(s application.CreatePokemonUseCase, logger *zap.Logger) *CreatePokemonController {
+func NewCreatePokemonController(s application.CreatePokemonUseCase) *CreatePokemonController {
 	return &CreatePokemonController{
-		s:      s,
-		logger: logger,
+		s: s,
 	}
 }

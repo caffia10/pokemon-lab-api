@@ -2,37 +2,28 @@ package http
 
 import (
 	"pokemon-lab-api/internal/pokemon-type/application"
+	"pokemon-lab-api/pkg/mderrors"
 
 	"github.com/gofiber/fiber/v2"
-	"go.uber.org/zap"
 )
 
 type RetrieveAllPokemonTypeController struct {
-	s      application.RetrieveAllPokemonTypeUseCase
-	logger *zap.Logger
+	s application.RetrieveAllPokemonTypeUseCase
 }
 
 func (c *RetrieveAllPokemonTypeController) Handle(ctx *fiber.Ctx) error {
 
-	lf := []zap.Field{
-		zap.String("logger", "RetrieveAllPokemonTypeController"),
-		zap.String("sub-logger", "Handle"),
-	}
-
 	pkmts, errR := c.s.Do()
 
 	if errR != nil {
-		lf = append(lf, zap.NamedError("error", errR))
-		c.logger.Error("error at retrieving all pokemon type from service", lf...)
-		return fiber.ErrConflict
+		return mderrors.NewMetadataError(errR)
 	}
 
 	return ctx.JSON(pkmts)
 }
 
-func NewRetrieveAllPokemonTypeController(s application.RetrieveAllPokemonTypeUseCase, logger *zap.Logger) *RetrieveAllPokemonTypeController {
+func NewRetrieveAllPokemonTypeController(s application.RetrieveAllPokemonTypeUseCase) *RetrieveAllPokemonTypeController {
 	return &RetrieveAllPokemonTypeController{
-		s:      s,
-		logger: logger,
+		s: s,
 	}
 }

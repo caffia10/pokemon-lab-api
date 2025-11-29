@@ -15,6 +15,7 @@ type restServer struct {
 	listenPort  string
 	app         *fiber.App
 	cpCtrl      *pkmInfra.CreatePokemonController
+	upCtrl      *pkmInfra.UpdatePokemonController
 	cptCtrl     *pkmtInfra.CreatePokemonTypeController
 	rtapkmtCtrl *pkmtInfra.RetrieveAllPokemonTypeController
 	rtapkmCtrl  *pkmInfra.RetrieveAllPokemonController
@@ -41,6 +42,7 @@ func NewFiberApiServer(
 
 	api := app.Group("api")
 	api.Post("/pokemons", cpCtrl.Validate, cpCtrl.Handle)
+	api.Put("/pokemons", cpCtrl.Validate, cpCtrl.Handle)
 	api.Get("/pokemons", rtapkmCtrl.Handle)
 	api.Post("/pokemon-types", cptCtrl.Validate, cptCtrl.Handle)
 	api.Get("/pokemon-types", rtapkmtCtrl.Handle)

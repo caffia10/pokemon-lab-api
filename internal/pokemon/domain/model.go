@@ -19,5 +19,6 @@ type PokemonRepository interface {
 	RetriveById(id string) (*Pokemon, error)
 	RetrieveAll() ([]Pokemon, error)
 	Create(pkm *Pokemon) error
+	Update(pkm *Pokemon) error
 	CreateManyPokemon(pkms []Pokemon) error
 }

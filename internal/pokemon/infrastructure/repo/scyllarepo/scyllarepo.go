@@ -153,6 +153,18 @@ func (r *PokemonScylla) Create(pkm *domain.Pokemon) error {
 	return nil
 }
 
+func (r *PokemonScylla) Update(pkm *domain.Pokemon) error {
+
+	q := r.session.Query(r.table.Update()).BindStruct(initializeDtoFromModel(pkm))
+
+	if err := q.ExecRelease(); err != nil {
+		return mderrors.NewMetadataError(err, mderrors.Metadata{Key: "pokemon", Value: pkm})
+	}
+
+	return nil
+
+}
+
 func (r *PokemonScylla) CreateManyPokemon(pkms []domain.Pokemon) error {
 
 	errChan := make(chan error)

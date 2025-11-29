@@ -16,6 +16,10 @@ type CreatePokemonUseCase interface {
 	Do(pkm *Pokemon) error
 }
 
+type UpdatePokemonUseCase interface {
+	Do(pkm *Pokemon) error
+}
+
 type CreatePokemonInBulkUseCase interface {
 	Do(pkms []Pokemon) error
 }

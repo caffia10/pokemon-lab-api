@@ -1,3 +1,8 @@
+## DESCRIPTION
+
+ABM of Pokemon
+scaffolding: Clean Architecture
+
 ## INSTALLATION REQUIREMENTS:
 
 - install cqlsh

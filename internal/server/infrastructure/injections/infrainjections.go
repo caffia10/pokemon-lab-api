@@ -25,5 +25,6 @@ func RetrieveInfraInjections() []interface{} {
 		logger.New,
 		pkmtInfraHttp.NewCreatePokemonTypeController,
 		pkmtInfraHttp.NewRetrieveAllPokemonTypeController,
+		pkmInfraHttp.NewRetrievePokemonController,
 	}
 }

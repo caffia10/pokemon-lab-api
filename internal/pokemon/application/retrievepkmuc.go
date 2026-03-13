@@ -1,7 +1,6 @@
 package application
 
 import (
-	pkmtDomain "pokemon-lab-api/internal/pokemon-type/domain"
 	"pokemon-lab-api/internal/pokemon/domain"
 
 	"go.uber.org/zap"
@@ -34,9 +33,12 @@ func (uc *defaultRetrievePokemonbyIdUseCase) Do(id string) (*domain.Pokemon, err
 	return p, nil
 }
 
-func NewRetrievePokemonbyIdUsecase(r domain.PokemonRepository, pkmtr pkmtDomain.PokemonTypeRepository) RetrievePokemonbyIdUseCase {
+func NewRetrievePokemonbyIdUsecase(
+	r domain.PokemonRepository,
+	l *zap.Logger) RetrievePokemonbyIdUseCase {
 
 	return &defaultRetrievePokemonbyIdUseCase{
-		repo: r,
+		repo:   r,
+		logger: l,
 	}
 }

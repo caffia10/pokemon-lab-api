@@ -19,6 +19,7 @@ type restServer struct {
 	cptCtrl     *pkmtInfra.CreatePokemonTypeController
 	rtapkmtCtrl *pkmtInfra.RetrieveAllPokemonTypeController
 	rtapkmCtrl  *pkmInfra.RetrieveAllPokemonController
+	rtpkmCtrl   *pkmInfra.RetrievePokemonController
 }
 
 func StarListen(rs *restServer) {
@@ -31,7 +32,8 @@ func NewFiberApiServer(
 	cpCtrl *pkmInfra.CreatePokemonController,
 	cptCtrl *pkmtInfra.CreatePokemonTypeController,
 	rtapkmtCtrl *pkmtInfra.RetrieveAllPokemonTypeController,
-	rtapkmCtrl *pkmInfra.RetrieveAllPokemonController) *restServer {
+	rtapkmCtrl *pkmInfra.RetrieveAllPokemonController,
+	rtpkmCtrl *pkmInfra.RetrievePokemonController) *restServer {
 	app := fiber.New(fiber.Config{
 		ErrorHandler: middlewares.MakeErrorHandler(logger),
 	})
@@ -44,6 +46,7 @@ func NewFiberApiServer(
 	api.Post("/pokemons", cpCtrl.Validate, cpCtrl.Handle)
 	api.Put("/pokemons", cpCtrl.Validate, cpCtrl.Handle)
 	api.Get("/pokemons", rtapkmCtrl.Handle)
+	api.Get("/pokemons/:id", rtpkmCtrl.Handle)
 	api.Post("/pokemon-types", cptCtrl.Validate, cptCtrl.Handle)
 	api.Get("/pokemon-types", rtapkmtCtrl.Handle)
 
@@ -54,5 +57,6 @@ func NewFiberApiServer(
 		cptCtrl:     cptCtrl,
 		rtapkmtCtrl: rtapkmtCtrl,
 		rtapkmCtrl:  rtapkmCtrl,
+		rtpkmCtrl:   rtpkmCtrl,
 	}
 }

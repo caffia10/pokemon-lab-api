@@ -219,8 +219,6 @@ func NewPokemonRepository(s *gocqlx.Session, c *config.Config) (domain.PokemonRe
 	var pokemonMetadata = table.Metadata{
 		Name:    c.PokemonScyllasTable,
 		Columns: []string{"id", "name", "category", "weight", "img_url", "types"},
-		PartKey: []string{"first_name"},
-		SortKey: []string{"last_name"},
 	}
 
 	r := &PokemonScylla{

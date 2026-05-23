@@ -1,4 +1,4 @@
-package domain
+package core
 
 type Pokemon struct {
 	Id       string
@@ -14,5 +14,5 @@ type PokemonRepository interface {
 	RetrieveAll() ([]Pokemon, error)
 	Create(pkm *Pokemon) error
 	Update(pkm *Pokemon) error
-	CreateManyPokemon(pkms []Pokemon) error
+	CreateMany(pkms []Pokemon) error
 }

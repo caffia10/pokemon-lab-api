@@ -1,7 +1,7 @@
 package http
 
 import (
-	"pokemon-lab-api/internal/pokemon/application"
+	"pokemon-lab-api/internal/core"
 	"pokemon-lab-api/pkg/mderrors"
 
 	"github.com/gofiber/fiber/v2"
@@ -15,23 +15,23 @@ type pokemonRequest struct {
 	Types    []pokemonTypeRequest `json:"types"`
 }
 
-func (req *pokemonRequest) toPokemon() *application.Pokemon {
-	pkm := &application.Pokemon{
+func (req *pokemonRequest) toPokemon() *core.Pokemon {
+	pkm := &core.Pokemon{
 		Name:     req.Name,
 		Category: req.Category,
 		Weight:   req.Weight,
 		ImgUrl:   req.ImgUrl,
-		Types:    make([]application.PokemonType, 0, len(req.Types)),
+		Types:    make([]core.PokemonType, 0, len(req.Types)),
 	}
 
 	for _, v := range req.Types {
-		pkm.Types = append(pkm.Types, (application.PokemonType)(v))
+		pkm.Types = append(pkm.Types, (core.PokemonType)(v))
 	}
 
 	return pkm
 }
 
-func MakeCreatePokemonHandler(s application.CreatePokemonUseCase) fiber.Handler {
+func makeCreatePokemonHandler(repo core.PokemonRepository) fiber.Handler {
 
 	return func(ctx *fiber.Ctx) error {
 
@@ -44,7 +44,7 @@ func MakeCreatePokemonHandler(s application.CreatePokemonUseCase) fiber.Handler 
 
 		pkm := req.toPokemon()
 
-		errC := s.Do(pkm)
+		errC := repo.Create(pkm)
 
 		if errC != nil {
 			return mderrors.NewMetadataError(errC)
@@ -54,10 +54,10 @@ func MakeCreatePokemonHandler(s application.CreatePokemonUseCase) fiber.Handler 
 	}
 }
 
-func MakeRetrieveAllPokemonHandler(s application.RetrieveAllPokemonUseCase) fiber.Handler {
+func makeRetrieveAllPokemonHandler(repo core.PokemonRepository) fiber.Handler {
 	return func(ctx *fiber.Ctx) error {
 
-		pkmts, errR := s.Do()
+		pkmts, errR := repo.RetrieveAll()
 
 		if errR != nil {
 			return mderrors.NewMetadataError(errR)
@@ -67,12 +67,12 @@ func MakeRetrieveAllPokemonHandler(s application.RetrieveAllPokemonUseCase) fibe
 	}
 }
 
-func MakeRetrievePokemonHandler(s application.RetrievePokemonbyIdUseCase) fiber.Handler {
+func makeRetrievePokemonHandler(repo core.PokemonRepository) fiber.Handler {
 	return func(ctx *fiber.Ctx) error {
 
 		id := ctx.Params("id")
 
-		pkmts, errR := s.Do(id)
+		pkmts, errR := repo.RetriveById(id)
 
 		if errR != nil {
 			return mderrors.NewMetadataError(errR)
@@ -82,7 +82,7 @@ func MakeRetrievePokemonHandler(s application.RetrievePokemonbyIdUseCase) fiber.
 	}
 }
 
-func MakeUpdatePokemonHandler(s application.UpdatePokemonUseCase) fiber.Handler {
+func makeUpdatePokemonHandler(repo core.PokemonRepository) fiber.Handler {
 	return func(ctx *fiber.Ctx) error {
 
 		req := new(pokemonRequest)
@@ -94,7 +94,7 @@ func MakeUpdatePokemonHandler(s application.UpdatePokemonUseCase) fiber.Handler 
 
 		pkm := req.toPokemon()
 
-		errC := s.Do(pkm)
+		errC := repo.Update(pkm)
 
 		if errC != nil {
 			return mderrors.NewMetadataError(errC)

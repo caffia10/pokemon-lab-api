@@ -1,11 +1,9 @@
-package scyllarepo
+package scylladb
 
 import (
 	"fmt"
 	"strings"
 )
-
-const msg = "errors detected in multi operation"
 
 type MultiError struct {
 	detail []error
@@ -18,7 +16,7 @@ func (m *MultiError) Append(e error) {
 func (m *MultiError) Error() string {
 	var sb strings.Builder
 	for i, d := range m.detail {
-		sb.WriteString(fmt.Sprintf("- index: %d - detail: %s ", i, d.Error()))
+		fmt.Fprintf(&sb, "- index: %d - detail: %s ", i, d.Error())
 	}
 	return sb.String()
 }

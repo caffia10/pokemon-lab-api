@@ -1,10 +1,10 @@
-package scyllarepo
+package scylladb
 
 import (
 	"errors"
 	"fmt"
-	"pokemon-lab-api/internal/pokemon/domain"
-	"pokemon-lab-api/internal/server/infrastructure/config"
+	"pokemon-lab-api/internal/config"
+	"pokemon-lab-api/internal/core"
 	"pokemon-lab-api/pkg/mderrors"
 
 	"sync"
@@ -24,32 +24,28 @@ type pokemonDto struct {
 	Types    []string `db:"types"` // save only the id
 }
 
-type PokemonScylla struct {
+type pokemonRepository struct {
 	session *gocqlx.Session
 	// table allows for simple CRUD operations based on personMetadata.
 	table *table.Table
 }
 
-func mapDtoToModel(dto *pokemonDto) domain.Pokemon {
-	tps := make([]domain.PokemonType, len(dto.Types))
+func NewPokemonRepository(s *gocqlx.Session, c *config.Config) (core.PokemonRepository, error) {
 
-	for i, v := range dto.Types {
-		tps[i] = domain.PokemonType{Name: v}
+	var pokemonMetadata = table.Metadata{
+		Name:    c.PokemonScyllasTable,
+		Columns: []string{"id", "name", "category", "weight", "img_url", "types"},
 	}
 
-	return domain.Pokemon{
-
-		Id:       dto.Id,
-		Name:     dto.Name,
-		ImgUrl:   dto.ImgUrl,
-		Category: dto.Category,
-		Weight:   dto.Weight,
-		Types:    tps,
+	r := &pokemonRepository{
+		session: s,
+		table:   table.New(pokemonMetadata),
 	}
 
+	return r, r.applyTable()
 }
 
-func (r *PokemonScylla) RetrieveAll() ([]domain.Pokemon, error) {
+func (r *pokemonRepository) RetrieveAll() ([]core.Pokemon, error) {
 
 	var pkmDtos []*pokemonDto
 
@@ -57,12 +53,12 @@ func (r *PokemonScylla) RetrieveAll() ([]domain.Pokemon, error) {
 
 	if err := q.SelectRelease(&pkmDtos); err != nil {
 		if errors.Is(err, gocql.ErrNotFound) {
-			return nil, mderrors.NewMetadataError(domain.ErrNotFoundPokemon)
+			return nil, mderrors.NewMetadataError(core.ErrNotFoundPokemon)
 		}
 		return nil, mderrors.NewMetadataError(err)
 	}
 
-	pts := make([]domain.Pokemon, len(pkmDtos))
+	pts := make([]core.Pokemon, len(pkmDtos))
 
 	for i, dto := range pkmDtos {
 		pts[i] = mapDtoToModel(dto)
@@ -71,7 +67,7 @@ func (r *PokemonScylla) RetrieveAll() ([]domain.Pokemon, error) {
 	return pts, nil
 }
 
-func (r *PokemonScylla) RetriveById(id string) (*domain.Pokemon, error) {
+func (r *pokemonRepository) RetriveById(id string) (*core.Pokemon, error) {
 
 	pkmDto := pokemonDto{Id: id}
 
@@ -80,7 +76,7 @@ func (r *PokemonScylla) RetriveById(id string) (*domain.Pokemon, error) {
 	if err := q.GetRelease(&pkmDto); err != nil {
 		if errors.Is(err, gocql.ErrNotFound) {
 			return nil, mderrors.NewMetadataError(
-				domain.ErrNotFoundPokemon,
+				core.ErrNotFoundPokemon,
 				mderrors.MakeIdMetaData(id))
 		}
 		return nil, mderrors.NewMetadataError(
@@ -94,7 +90,7 @@ func (r *PokemonScylla) RetriveById(id string) (*domain.Pokemon, error) {
 }
 
 /*
-func (r *PokemonScylla) RetriveByIds(ids []string) (*domain.Pokemon, error) {
+func (r *PokemonScylla) RetriveByIds(ids []string) (*core.Pokemon, error) {
 
 	lf := []zap.Field{
 		zap.String("logger", "PokemonScylla"),
@@ -134,25 +130,7 @@ func (r *PokemonScylla) RetriveByIds(ids []string) (*domain.Pokemon, error) {
 	return pkm, nil
 }*/
 
-func initializeDtoFromModel(pkm *domain.Pokemon) *pokemonDto {
-
-	pkmd := &pokemonDto{
-		Id:       uuid.NewString(),
-		Name:     pkm.Name,
-		Category: pkm.Category,
-		Weight:   pkm.Weight,
-		ImgUrl:   pkm.ImgUrl,
-		Types:    make([]string, 0, len(pkm.Types)),
-	}
-
-	for _, t := range pkm.Types {
-		pkmd.Types = append(pkmd.Types, t.Name)
-	}
-
-	return pkmd
-}
-
-func (r *PokemonScylla) Create(pkm *domain.Pokemon) error {
+func (r *pokemonRepository) Create(pkm *core.Pokemon) error {
 	q := r.session.Query(r.table.Insert()).BindStruct(initializeDtoFromModel(pkm))
 
 	if err := q.ExecRelease(); err != nil {
@@ -162,25 +140,13 @@ func (r *PokemonScylla) Create(pkm *domain.Pokemon) error {
 	return nil
 }
 
-func (r *PokemonScylla) Update(pkm *domain.Pokemon) error {
-
-	q := r.session.Query(r.table.Update()).BindStruct(initializeDtoFromModel(pkm))
-
-	if err := q.ExecRelease(); err != nil {
-		return mderrors.NewMetadataError(err, mderrors.Metadata{Key: "pokemon", Value: pkm})
-	}
-
-	return nil
-
-}
-
-func (r *PokemonScylla) CreateManyPokemon(pkms []domain.Pokemon) error {
+func (r *pokemonRepository) CreateMany(pkms []core.Pokemon) error {
 
 	errChan := make(chan error)
 	var wg sync.WaitGroup
 	for _, pkm := range pkms {
 		wg.Add(1)
-		go func(p *domain.Pokemon, w *sync.WaitGroup) {
+		go func(p *core.Pokemon, w *sync.WaitGroup) {
 			defer w.Done()
 			err := r.Create(p)
 			if err != nil {
@@ -205,7 +171,37 @@ func (r *PokemonScylla) CreateManyPokemon(pkms []domain.Pokemon) error {
 	return nil
 }
 
-func (r *PokemonScylla) applyTable() error {
+func (r *pokemonRepository) Update(pkm *core.Pokemon) error {
+
+	q := r.session.Query(r.table.Update()).BindStruct(initializeDtoFromModel(pkm))
+
+	if err := q.ExecRelease(); err != nil {
+		return mderrors.NewMetadataError(err, mderrors.Metadata{Key: "pokemon", Value: pkm})
+	}
+
+	return nil
+
+}
+
+func initializeDtoFromModel(pkm *core.Pokemon) *pokemonDto {
+
+	pkmd := &pokemonDto{
+		Id:       uuid.NewString(),
+		Name:     pkm.Name,
+		Category: pkm.Category,
+		Weight:   pkm.Weight,
+		ImgUrl:   pkm.ImgUrl,
+		Types:    make([]string, 0, len(pkm.Types)),
+	}
+
+	for _, t := range pkm.Types {
+		pkmd.Types = append(pkmd.Types, t.Name)
+	}
+
+	return pkmd
+}
+
+func (r *pokemonRepository) applyTable() error {
 	data := make([]any, len(r.table.Metadata().Columns)+1)
 	data[0] = r.table.Name()
 	for i := 0; i < len(r.table.Metadata().Columns); i++ {
@@ -223,17 +219,21 @@ func (r *PokemonScylla) applyTable() error {
 	return r.session.ExecStmt(query)
 }
 
-func NewPokemonRepository(s *gocqlx.Session, c *config.Config) (domain.PokemonRepository, error) {
+func mapDtoToModel(dto *pokemonDto) core.Pokemon {
+	tps := make([]core.PokemonType, len(dto.Types))
 
-	var pokemonMetadata = table.Metadata{
-		Name:    c.PokemonScyllasTable,
-		Columns: []string{"id", "name", "category", "weight", "img_url", "types"},
+	for i, v := range dto.Types {
+		tps[i] = core.PokemonType{Name: v}
 	}
 
-	r := &PokemonScylla{
-		session: s,
-		table:   table.New(pokemonMetadata),
+	return core.Pokemon{
+
+		Id:       dto.Id,
+		Name:     dto.Name,
+		ImgUrl:   dto.ImgUrl,
+		Category: dto.Category,
+		Weight:   dto.Weight,
+		Types:    tps,
 	}
 
-	return r, r.applyTable()
 }

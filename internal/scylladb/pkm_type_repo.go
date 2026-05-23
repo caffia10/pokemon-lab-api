@@ -1,10 +1,11 @@
-package scyllarepo
+package scylladb
 
 import (
 	"errors"
 	"fmt"
-	"pokemon-lab-api/internal/pokemon-type/domain"
-	"pokemon-lab-api/internal/server/infrastructure/config"
+	"pokemon-lab-api/internal/config"
+	"pokemon-lab-api/internal/core"
+	"pokemon-lab-api/pkg/mderrors"
 	"sync"
 
 	"github.com/gocql/gocql"
@@ -14,12 +15,15 @@ import (
 	"go.uber.org/zap"
 )
 
+var ErrAllPokemonTypesFail = errors.New("all pokemon types fail to be created")
+var ErrSomePokemonTypesFail = errors.New("some pokemon types fail to be created")
+
 type pokemonTypeDto struct {
 	Id   string `db:"id"`
 	Name string `db:"name"`
 }
 
-type PokemonType struct {
+type pokemonTypeRepository struct {
 	session *gocqlx.Session
 	// table allows for simple CRUD operations based on personMetadata.
 	table *table.Table
@@ -27,47 +31,49 @@ type PokemonType struct {
 	logger *zap.Logger
 }
 
-func (r *PokemonType) RetriveAll() ([]*domain.PokemonType, error) {
+func NewPokemonTypeRepository(s *gocqlx.Session, c *config.Config, l *zap.Logger) (core.PokemonTypeRepository, error) {
 
-	lf := []zap.Field{
-		zap.String("logger", "PokemonType"),
-		zap.String("sub-logger", "RetriveAll"),
+	var pokemonMetadata = table.Metadata{
+		Name:    c.PokemonTypeScyllasTable,
+		Columns: []string{"id", "name"},
+		PartKey: []string{"id"},
+		SortKey: []string{"id"},
 	}
 
-	var pkmDtos []*pokemonTypeDto
+	r := &pokemonTypeRepository{
+		session: s,
+		table:   table.New(pokemonMetadata),
+		logger:  l,
+	}
 
-	r.logger.Info("retrieving pokemon types", lf...)
+	return r, r.applyTable()
+}
+
+func (r *pokemonTypeRepository) RetrieveAll() ([]core.PokemonType, error) {
+
+	var pkmDtos []pokemonTypeDto
 
 	q := r.session.Query(fmt.Sprintf("SELECT * FROM %s", r.table.Name()), nil)
 
 	if err := q.SelectRelease(&pkmDtos); err != nil {
 		if errors.Is(err, gocql.ErrNotFound) {
-			r.logger.Warn("no document was found")
-			return nil, domain.ErrNotFoundPokemonType
+			return nil, core.ErrNotFoundPokemonType
 		}
-		lf = append(lf, zap.NamedError("error", err))
-		r.logger.Error("unexpected error at retriving pokemon types", lf...)
 		return nil, err
 	}
 
-	pts := make([]*domain.PokemonType, len(pkmDtos))
+	pts := make([]core.PokemonType, len(pkmDtos))
 
 	for i, dto := range pkmDtos {
-		pts[i] = (*domain.PokemonType)(dto)
+		pts[i] = core.PokemonType(dto)
 	}
 
 	return pts, nil
 }
 
-func (r *PokemonType) Create(pkmt *domain.PokemonType) error {
+func (r *pokemonTypeRepository) Create(pkmt *core.PokemonType) error {
 
-	lf := []zap.Field{
-		zap.String("logger", "PokemonType"),
-		zap.String("sub-logger", "Create"),
-		zap.String("pokemon-type-name", pkmt.Name),
-	}
-
-	r.logger.Info("creating pokemon type", lf...)
+	r.logger.Debug("creating pokemon type on scyllas", zap.String("pokemon-type-name", pkmt.Name))
 
 	q := r.session.Query(r.table.Insert()).BindStruct(&pokemonTypeDto{
 		Id:   uuid.NewString(),
@@ -75,51 +81,49 @@ func (r *PokemonType) Create(pkmt *domain.PokemonType) error {
 	})
 
 	if err := q.ExecRelease(); err != nil {
-		lf = append(lf, zap.NamedError("error", err))
-		r.logger.Error("unexpected error at creating pokemon type", lf...)
-
 		return err
 	}
 
 	return nil
 }
 
-func (r *PokemonType) CreateMany(pkmts []*domain.PokemonType) error {
+func (r *pokemonTypeRepository) CreateMany(pkmts []core.PokemonType) error {
 
 	var wg sync.WaitGroup
-	errChannel := make(chan *PokemonType)
+	errChannel := make(chan core.PokemonType)
 	for _, pkmt := range pkmts {
 		wg.Add(1)
-		go func(pt *domain.PokemonType) {
+		go func(pt *core.PokemonType) {
 			defer wg.Done()
 			err := r.Create(pt)
 			if err != nil {
-				errChannel <- pt
+				errChannel <- *pt
 			}
-		}(pkmt)
+		}(&pkmt)
 	}
 	wg.Wait()
 	close(errChannel)
 
 	if len(errChannel) > 0 {
 
-		if len(errChannel) == len(pkmst) {
-			return AllPokemonTypesFail
+		if len(errChannel) == len(pkmts) {
+			return ErrAllPokemonTypesFail
 		}
 
-		ept := make([]*PokemonType, 0)
+		ept := make([]mderrors.Metadata, len(errChannel))
 		for pt := range errChannel {
 
-			ept = append(ept, pt)
+			ept = append(ept, mderrors.Metadata{Key: "failed-pokemon-type", Value: pt})
+
 		}
 
-		return NewSomePokemonFailCreationError(ept)
+		return mderrors.NewMetadataError(ErrSomePokemonTypesFail, ept...)
 	}
 
 	return nil
 }
 
-func (r *PokemonType) applyTable() error {
+func (r *pokemonTypeRepository) applyTable() error {
 	data := make([]any, len(r.table.Metadata().Columns)+1)
 	data[0] = r.table.Name()
 	for i := 0; i < len(r.table.Metadata().Columns); i++ {
@@ -131,22 +135,4 @@ func (r *PokemonType) applyTable() error {
 	);`, data...)
 
 	return r.session.ExecStmt(query)
-}
-
-func NewPokemonTypeRepository(s *gocqlx.Session, c *config.Config, l *zap.Logger) (domain.PokemonTypeRepository, error) {
-
-	var pokemonMetadata = table.Metadata{
-		Name:    c.PokemonTypeScyllasTable,
-		Columns: []string{"id", "name"},
-		PartKey: []string{"id"},
-		SortKey: []string{"id"},
-	}
-
-	r := &PokemonType{
-		session: s,
-		table:   table.New(pokemonMetadata),
-		logger:  l,
-	}
-
-	return r, r.applyTable()
 }

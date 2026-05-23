@@ -1,8 +1,8 @@
-package scylladbctx
+package scylladb
 
 import (
 	"fmt"
-	"pokemon-lab-api/internal/server/infrastructure/config"
+	"pokemon-lab-api/internal/config"
 
 	"github.com/gocql/gocql"
 	"github.com/scylladb/gocqlx/v3"

@@ -1,11 +1,5 @@
 package domain
 
-import (
-	pkmtDomain "pokemon-lab-api/internal/pokemon-type/domain"
-)
-
-type PokemonType = pkmtDomain.PokemonType
-
 type Pokemon struct {
 	Id       string
 	Name     string

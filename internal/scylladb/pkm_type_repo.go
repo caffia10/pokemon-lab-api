@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"pokemon-lab-api/internal/pokemon-type/domain"
 	"pokemon-lab-api/internal/server/infrastructure/config"
+	"sync"
 
 	"github.com/gocql/gocql"
 	"github.com/google/uuid"
@@ -12,6 +13,11 @@ import (
 	"github.com/scylladb/gocqlx/v3"
 	"go.uber.org/zap"
 )
+
+type pokemonTypeDto struct {
+	Id   string `db:"id"`
+	Name string `db:"name"`
+}
 
 type PokemonType struct {
 	session *gocqlx.Session
@@ -73,6 +79,41 @@ func (r *PokemonType) Create(pkmt *domain.PokemonType) error {
 		r.logger.Error("unexpected error at creating pokemon type", lf...)
 
 		return err
+	}
+
+	return nil
+}
+
+func (r *PokemonType) CreateMany(pkmts []*domain.PokemonType) error {
+
+	var wg sync.WaitGroup
+	errChannel := make(chan *PokemonType)
+	for _, pkmt := range pkmts {
+		wg.Add(1)
+		go func(pt *domain.PokemonType) {
+			defer wg.Done()
+			err := r.Create(pt)
+			if err != nil {
+				errChannel <- pt
+			}
+		}(pkmt)
+	}
+	wg.Wait()
+	close(errChannel)
+
+	if len(errChannel) > 0 {
+
+		if len(errChannel) == len(pkmst) {
+			return AllPokemonTypesFail
+		}
+
+		ept := make([]*PokemonType, 0)
+		for pt := range errChannel {
+
+			ept = append(ept, pt)
+		}
+
+		return NewSomePokemonFailCreationError(ept)
 	}
 
 	return nil

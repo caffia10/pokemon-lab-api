@@ -15,7 +15,9 @@ func InitServer() {
 	ids = append(ids, RetrieveInjections()...)
 
 	for _, d := range ids {
-		panic(c.Provide(d))
+		if err := c.Provide(d); err != nil {
+			panic(err)
+		}
 	}
 
 	err := c.Invoke(http.StarListen)

@@ -1,6 +1,7 @@
 package http
 
 import (
+	"errors"
 	"pokemon-lab-api/internal/core"
 	"pokemon-lab-api/pkg/mderrors"
 
@@ -8,15 +9,17 @@ import (
 )
 
 type pokemonRequest struct {
+	Id       string               `json:"id"`
 	Name     string               `json:"name"`
 	Weight   string               `json:"weight"`
 	Category string               `json:"category"`
-	ImgUrl   string               `json:"img_url"`
+	ImgUrl   string               `json:"imgUrl"`
 	Types    []pokemonTypeRequest `json:"types"`
 }
 
 func (req *pokemonRequest) toPokemon() *core.Pokemon {
 	pkm := &core.Pokemon{
+		Id:       req.Id,
 		Name:     req.Name,
 		Category: req.Category,
 		Weight:   req.Weight,
@@ -31,15 +34,30 @@ func (req *pokemonRequest) toPokemon() *core.Pokemon {
 	return pkm
 }
 
+// parseBody parses the request body and keeps the parser's error detail
+// instead of masking it behind a generic 400.
+func parseBody(ctx *fiber.Ctx, out any) error {
+	err := ctx.BodyParser(out)
+	if err == nil {
+		return nil
+	}
+
+	var fe *fiber.Error
+	if errors.As(err, &fe) {
+		// e.g. 422 when the Content-Type is missing or not supported
+		return fiber.NewError(fe.Code, fe.Message+": expected Content-Type application/json, got '"+string(ctx.Request().Header.ContentType())+"'")
+	}
+
+	return fiber.NewError(fiber.StatusBadRequest, "invalid request body: "+err.Error())
+}
+
 func makeCreatePokemonHandler(repo core.PokemonRepository) fiber.Handler {
 
 	return func(ctx *fiber.Ctx) error {
 
 		req := new(pokemonRequest)
-		errB := ctx.BodyParser(req)
-
-		if errB != nil {
-			return fiber.ErrBadRequest
+		if err := parseBody(ctx, req); err != nil {
+			return err
 		}
 
 		pkm := req.toPokemon()
@@ -86,10 +104,12 @@ func makeUpdatePokemonHandler(repo core.PokemonRepository) fiber.Handler {
 	return func(ctx *fiber.Ctx) error {
 
 		req := new(pokemonRequest)
-		errB := ctx.BodyParser(req)
+		if err := parseBody(ctx, req); err != nil {
+			return err
+		}
 
-		if errB != nil {
-			return fiber.ErrBadRequest
+		if req.Id == "" {
+			return fiber.NewError(fiber.StatusBadRequest, "id is required to update a pokemon")
 		}
 
 		pkm := req.toPokemon()

@@ -35,6 +35,7 @@ func NewPokemonRepository(s *gocqlx.Session, c *config.Config) (core.PokemonRepo
 	var pokemonMetadata = table.Metadata{
 		Name:    c.PokemonScyllasTable,
 		Columns: []string{"id", "name", "category", "weight", "img_url", "types"},
+		PartKey: []string{"id"},
 	}
 
 	r := &pokemonRepository{
@@ -173,7 +174,10 @@ func (r *pokemonRepository) CreateMany(pkms []core.Pokemon) error {
 
 func (r *pokemonRepository) Update(pkm *core.Pokemon) error {
 
-	q := r.session.Query(r.table.Update()).BindStruct(initializeDtoFromModel(pkm))
+	dto := initializeDtoFromModel(pkm)
+	dto.Id = pkm.Id
+
+	q := r.session.Query(r.table.Update(r.table.Metadata().Columns[1:]...)).BindStruct(dto)
 
 	if err := q.ExecRelease(); err != nil {
 		return mderrors.NewMetadataError(err, mderrors.Metadata{Key: "pokemon", Value: pkm})

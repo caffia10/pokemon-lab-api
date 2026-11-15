@@ -1,7 +1,14 @@
-## DESCRIPTION
+# pokedex — pokemon-lab-api
 
-ABM of Pokemon
-scaffolding: Clean Architecture
+Fuente de verdad de especies Pokémon y tipos.
+
+**Stack:** Go · Fiber v2 · ScyllaDB · dig — **Paradigma:** Clean Architecture liviana.
+
+```bash
+go run ./cmd/main.go   # con envs/local.env
+```
+
+Arquitectura, convenciones y deuda: [CLAUDE.md](CLAUDE.md) · Mapa del sistema: `~/dev/pokemon-lab-hub/ARCHITECTURE.md`
 
 ## INSTALLATION REQUIREMENTS:
 

@@ -42,5 +42,5 @@ Requiere ScyllaDB en `localhost:9042` (ver `docker-compose.yml` en `poke-lab-ui`
 
 ## Endpoints
 
-`GET /ping` · `POST|PUT|GET /api/pokemons` · `GET /api/pokemons/:id` ·
+`GET /ping` · `POST|PUT|GET /api/pokemons` · `GET|DELETE /api/pokemons/:id` ·
 `POST|GET /api/pokemon-types`

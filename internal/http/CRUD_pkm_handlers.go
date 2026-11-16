@@ -6,6 +6,7 @@ import (
 	"pokemon-lab-api/pkg/mderrors"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 )
 
 type pokemonRequest struct {
@@ -118,6 +119,25 @@ func makeUpdatePokemonHandler(repo core.PokemonRepository) fiber.Handler {
 
 		if errC != nil {
 			return mderrors.NewMetadataError(errC)
+		}
+
+		return ctx.SendStatus(fiber.StatusOK)
+	}
+}
+
+func makeDeletePokemonHandler(repo core.PokemonRepository) fiber.Handler {
+	return func(ctx *fiber.Ctx) error {
+
+		id := ctx.Params("id")
+
+		// the partition key is a UUID: reject anything else here instead of letting the
+		// driver fail to marshal it and surface as a 409
+		if _, err := uuid.Parse(id); err != nil {
+			return fiber.NewError(fiber.StatusBadRequest, "id must be a UUID: "+id)
+		}
+
+		if err := repo.Delete(id); err != nil {
+			return mderrors.NewMetadataError(err)
 		}
 
 		return ctx.SendStatus(fiber.StatusOK)

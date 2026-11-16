@@ -187,6 +187,19 @@ func (r *pokemonRepository) Update(pkm *core.Pokemon) error {
 
 }
 
+// Delete is idempotent: in Scylla a DELETE writes a tombstone whether or not the row
+// exists, so a missing id is not an error.
+func (r *pokemonRepository) Delete(id string) error {
+
+	q := r.session.Query(r.table.Delete()).BindStruct(pokemonDto{Id: id})
+
+	if err := q.ExecRelease(); err != nil {
+		return mderrors.NewMetadataError(err, mderrors.Metadata{Key: "pokemon_id", Value: id})
+	}
+
+	return nil
+}
+
 func initializeDtoFromModel(pkm *core.Pokemon) *pokemonDto {
 
 	pkmd := &pokemonDto{

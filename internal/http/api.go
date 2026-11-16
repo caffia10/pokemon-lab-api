@@ -37,6 +37,7 @@ func NewFiberApiServer(
 	api.Put("/pokemons", makeUpdatePokemonHandler(pokemonRepository))
 	api.Get("/pokemons", makeRetrieveAllPokemonHandler(pokemonRepository))
 	api.Get("/pokemons/:id", makeRetrievePokemonHandler(pokemonRepository))
+	api.Delete("/pokemons/:id", makeDeletePokemonHandler(pokemonRepository))
 	api.Post("/pokemon-types", makeCreatePokemonTypeHandler(pokemonTypeRepository))
 	api.Get("/pokemon-types", makeRetrieveAllPokemonTypeHandler(pokemonTypeRepository))
 
